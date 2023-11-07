@@ -1,7 +1,7 @@
 # MathTeacher-OpenAI-Assistant
 !!This is a work in progress!!
 
-Welcome to MathTutor-OpenAI, an innovative tutoring platform designed to help students excel in mathematics through the power of artificial intelligence. The system utilizes the robust OpenAI Assistant API to provide instant, interactive math tutoring sessions tailored to each student's individual learning pace and style.
+Welcome to MathTeacber-OpenAI-Assistant, an innovative tutoring platform designed to help students excel in mathematics through the power of artificial intelligence. The system utilizes the robust OpenAI Assistant API to provide instant, interactive math tutoring sessions tailored to each student's individual learning pace and style.
 
 ## Features
 
@@ -24,4 +24,4 @@ We welcome contributions from the community. If you have suggestions for improve
 
 ## License
 
-MathTutor-OpenAI is open-source software licensed under the MIT license.
+MathTeacher-OpenAI-Assistant is open-source software licensed under the MIT license.
