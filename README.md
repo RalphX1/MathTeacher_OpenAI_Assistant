@@ -1,4 +1,4 @@
-# MathTutor-OpenAI-Assistant
+# MathTeacher-OpenAI-Assistant
 
 Welcome to MathTutor-OpenAI, an innovative tutoring platform designed to help students excel in mathematics through the power of artificial intelligence. The system utilizes the robust OpenAI Assistant API to provide instant, interactive math tutoring sessions tailored to each student's individual learning pace and style.
 
