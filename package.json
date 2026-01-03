@@ -1,0 +1,24 @@
+{
+  "name": "math-teacher-openai-assistant",
+  "version": "1.0.0",
+  "description": "An interactive math tutoring platform using OpenAI Assistant API",
+  "main": "mathTeacher.js",
+  "scripts": {
+    "start": "node mathTeacher.js"
+  },
+  "keywords": [
+    "math",
+    "tutor",
+    "openai",
+    "assistant",
+    "education"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "openai": "^4.20.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
