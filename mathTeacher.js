@@ -1,10 +1,31 @@
-require("dotenv").config();
 const OpenAI = require("openai");
 const readline = require("readline");
 
+// Get API key: first check system environment, then try .env file
+function getApiKey() {
+  // First, check if OPENAI_API_KEY is already set in system environment
+  if (process.env.OPENAI_API_KEY) {
+    console.log("Using OPENAI_API_KEY from system environment variables.");
+    return process.env.OPENAI_API_KEY;
+  }
+
+  // If not found, try loading from .env file
+  try {
+    require("dotenv").config();
+    if (process.env.OPENAI_API_KEY) {
+      console.log("Using OPENAI_API_KEY from .env file.");
+      return process.env.OPENAI_API_KEY;
+    }
+  } catch {
+    // dotenv not available or .env file doesn't exist
+  }
+
+  return null;
+}
+
 // Configuration from environment variables with defaults
 const config = {
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: getApiKey(),
   assistantId: process.env.OPENAI_ASSISTANT_ID || null,
   model: process.env.OPENAI_MODEL || "gpt-4-turbo",
   assistantName: process.env.ASSISTANT_NAME || "Math Tutor",
@@ -20,7 +41,7 @@ const config = {
 function validateConfig() {
   if (!config.apiKey) {
     throw new Error(
-      "OPENAI_API_KEY is required. Please set it in your .env file."
+      "OPENAI_API_KEY not found. Please set it as a system environment variable or in a .env file."
     );
   }
 }
