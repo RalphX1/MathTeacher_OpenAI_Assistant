@@ -5,11 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math Tutor</title>
     <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Math Tutor</h1>
-        <p class="subtitle">Ask me any math question and I'll help you solve it step by step.</p>
+        <div class="header">
+            <div>
+                <h1>Math Tutor</h1>
+                <p class="subtitle">Ask me any math question and I'll help you solve it step by step.</p>
+            </div>
+            <div class="controls">
+                <button id="theme-toggle" class="icon-btn" title="Toggle dark mode" aria-label="Toggle dark mode">
+                    <span class="theme-icon">&#9790;</span>
+                </button>
+                <button id="clear-btn" class="icon-btn" title="Clear conversation" aria-label="Clear conversation">
+                    &#128465; Clear
+                </button>
+            </div>
+        </div>
 
         <form id="question-form">
             <label for="question">Enter your question:</label>
@@ -31,32 +47,80 @@
         const submitBtn = document.getElementById('submit-btn');
         const loading = document.getElementById('loading');
         const conversation = document.getElementById('conversation');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        const clearBtn = document.getElementById('clear-btn');
 
         // Generate a simple session ID
         const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
 
+        // Dark mode handling
+        function setTheme(dark) {
+            document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            themeIcon.innerHTML = dark ? '&#9728;' : '&#9790;'; // Sun or Moon
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        }
+
+        // Initialize theme from localStorage or system preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const savedTheme = localStorage.getItem('theme');
+        setTheme(savedTheme ? savedTheme === 'dark' : prefersDark);
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            setTheme(!isDark);
+        });
+
+        // Listen for system preference changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches);
+            }
+        });
+
+        // Clear conversation
+        clearBtn.addEventListener('click', async () => {
+            if (!confirm('Clear the conversation?')) return;
+
+            try {
+                await fetch('/api/clear', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId })
+                });
+                conversation.innerHTML = '';
+            } catch (error) {
+                console.error('Error clearing conversation:', error);
+            }
+        });
+
+        // Form submission with timeout
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const question = input.value.trim();
             if (!question) return;
 
-            // Add user message to conversation
             addMessage('user', question);
             input.value = '';
 
-            // Show loading, disable form
             loading.classList.remove('hidden');
             submitBtn.disabled = true;
             input.disabled = true;
+
+            // Create AbortController for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout
 
             try {
                 const response = await fetch('/api/ask', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question, sessionId })
+                    body: JSON.stringify({ question, sessionId }),
+                    signal: controller.signal
                 });
 
+                clearTimeout(timeoutId);
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -65,7 +129,11 @@
 
                 addMessage('assistant', data.answer);
             } catch (error) {
-                addMessage('error', error.message);
+                if (error.name === 'AbortError') {
+                    addMessage('error', 'Request timed out. Please try again.');
+                } else {
+                    addMessage('error', error.message);
+                }
             } finally {
                 loading.classList.add('hidden');
                 submitBtn.disabled = false;
@@ -78,19 +146,52 @@
             const div = document.createElement('div');
             div.className = `message ${role}`;
 
+            const header = document.createElement('div');
+            header.className = 'message-header';
+
             const label = document.createElement('div');
             label.className = 'message-label';
             label.textContent = role === 'user' ? 'You' : role === 'assistant' ? 'Math Tutor' : 'Error';
 
+            header.appendChild(label);
+
+            // Add copy button for assistant messages
+            if (role === 'assistant') {
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '&#128203;'; // Clipboard icon
+                copyBtn.title = 'Copy to clipboard';
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(content).then(() => {
+                        copyBtn.innerHTML = '&#10003;'; // Checkmark
+                        setTimeout(() => copyBtn.innerHTML = '&#128203;', 2000);
+                    });
+                });
+                header.appendChild(copyBtn);
+            }
+
             const text = document.createElement('div');
             text.className = 'message-content';
+            // Use textContent for safety (prevents XSS)
             text.textContent = content;
 
-            div.appendChild(label);
+            div.appendChild(header);
             div.appendChild(text);
             conversation.appendChild(div);
 
-            // Scroll to bottom
+            // Render math with KaTeX after adding to DOM
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(text, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\[', right: '\\]', display: true},
+                        {left: '\\(', right: '\\)', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
             div.scrollIntoView({ behavior: 'smooth' });
         }
 

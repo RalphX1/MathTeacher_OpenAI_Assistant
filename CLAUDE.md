@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Overview
 
-MathTeacher-OpenAI-Assistant is a CLI-based AI math tutoring application that uses OpenAI's Assistant API to provide interactive, personalized math help with step-by-step explanations.
+MathTeacher-OpenAI-Assistant is an AI math tutoring application with both web and CLI interfaces. It uses OpenAI's Assistant API for interactive, personalized math help with step-by-step explanations and LaTeX math rendering.
 
 ## Commands
 
@@ -17,46 +17,64 @@ npm start
 
 # Run CLI version
 npm run cli
+
+# Run linter
+npm run lint
+
+# Format code
+npm run format
+
+# Run tests
+npm test
 ```
 
 ## Architecture
 
-- **Single-file application**: `mathTeacher.js` (294 lines) contains all application logic
-- **OpenAI Assistants API**: Uses threads for multi-turn conversations with context persistence
-- **Code Interpreter**: Enabled for mathematical computations
-- **Smart polling**: Exponential backoff when waiting for assistant responses
+- **Web server**: `server.js` - Express server with API endpoints, CORS, rate limiting
+- **CLI app**: `mathTeacher.js` - Terminal-based interactive tutor
+- **Frontend**: `index.html` + `style.css` - KaTeX math rendering, dark mode, responsive
+- **Storage**: `lib/storage.js` - Persistent conversation threads (JSON file)
+- **Tests**: `__tests__/` - Jest unit tests
 
-## Key Configuration
+## Key Files
 
-Environment variables (system env or `.env` file):
+| File | Purpose |
+|------|---------|
+| `server.js` | Express API server with /api/ask, /api/clear, /api/health |
+| `mathTeacher.js` | CLI version with readline interface |
+| `index.html` | Web frontend with KaTeX, dark mode toggle |
+| `style.css` | CSS with custom properties for theming |
+| `lib/storage.js` | File-based thread persistence |
+
+## Configuration
+
+See `.env.example` for all options. Key variables:
 - `OPENAI_API_KEY` (required) - OpenAI API key
-- `OPENAI_ASSISTANT_ID` (optional) - Reuse existing assistant to save costs
+- `OPENAI_ASSISTANT_ID` (optional) - Reuse existing assistant
 - `OPENAI_MODEL` (optional) - Default: "gpt-4-turbo"
-- `POLLING_INTERVAL_MS` (optional) - Default: 1000
-- `POLLING_TIMEOUT_MS` (optional) - Default: 120000
+- `PORT` (optional) - Default: 3000
+- `RATE_LIMIT_MAX_REQUESTS` (optional) - Default: 20/min
+- `CORS_ALLOWED_ORIGINS` (optional) - Default: *
 
-## Code Structure
+## API Endpoints
 
+- `POST /api/ask` - Submit question, returns answer
+- `POST /api/clear` - Clear conversation session
+- `GET /api/health` - Health check
+
+## Testing
+
+```bash
+npm test              # Run all tests
+npm run test:coverage # With coverage report
+npm run test:watch    # Watch mode
 ```
-mathTeacher.js
-├── getApiKey()              - API key retrieval (env → .env fallback)
-├── config                   - Configuration object with defaults
-├── validateConfig()         - Validates required config
-├── getOrCreateAssistant()   - Creates or retrieves OpenAI assistant
-├── waitForRunCompletion()   - Polls run status with exponential backoff
-├── extractMessageContent()  - Safely extracts text from API responses
-├── getAssistantResponse()   - Gets assistant's response for a run
-└── main()                   - Entry point with conversation loop
-```
 
-## Testing Notes
-
-- The app uses readline for interactive input; piping input via echo doesn't work well
-- Run interactively with `npm start` for proper testing
-- Type "quit" or "exit" to end session
+Tests cover:
+- `lib/storage.js` - Thread persistence
+- Validation functions - Input validation, message extraction
 
 ## Dependencies
 
-- `openai` (^4.20.0) - OpenAI API SDK
-- `dotenv` (^16.3.1) - Environment variable management
-- Node.js >= 18.0.0 required
+**Production**: express, openai, dotenv, cors, express-rate-limit
+**Dev**: eslint, prettier, jest

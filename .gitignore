@@ -17,3 +17,9 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Test coverage
+coverage/
+
+# Data storage
+data/

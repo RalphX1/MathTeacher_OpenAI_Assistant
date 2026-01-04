@@ -1,6 +1,9 @@
 const express = require("express");
 const OpenAI = require("openai");
 const path = require("path");
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
+const storage = require("./lib/storage");
 
 // Load environment variables
 try {
@@ -11,6 +14,27 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.CORS_ALLOWED_ORIGINS
+    ? process.env.CORS_ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+    : "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+  maxAge: 86400,
+};
+app.use(cors(corsOptions));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000,
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 20,
+  message: { error: "Too many requests. Please wait and try again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", limiter);
 
 // Middleware
 app.use(express.json());
@@ -38,9 +62,8 @@ if (!config.apiKey) {
 // Initialize OpenAI client
 const openai = new OpenAI({ apiKey: config.apiKey });
 
-// Store assistant and threads (in-memory for simplicity)
+// Store assistant (threads now use persistent storage)
 let assistant = null;
-const threads = new Map();
 
 // Terminal states for a run
 const TERMINAL_STATES = ["completed", "failed", "cancelled", "expired"];
@@ -134,12 +157,12 @@ app.post("/api/ask", async (req, res) => {
     // Get or create assistant
     const currentAssistant = await getOrCreateAssistant();
 
-    // Get or create thread for this session
-    let threadId = threads.get(sessionId);
+    // Get or create thread for this session (using persistent storage)
+    let threadId = storage.getThread(sessionId);
     if (!threadId) {
       const thread = await openai.beta.threads.create();
       threadId = thread.id;
-      if (sessionId) threads.set(sessionId, threadId);
+      if (sessionId) storage.setThread(sessionId, threadId);
     }
 
     // Send message
@@ -171,6 +194,15 @@ app.post("/api/ask", async (req, res) => {
 
     res.status(500).json({ error: error.message || "An error occurred." });
   }
+});
+
+// Clear conversation endpoint
+app.post("/api/clear", (req, res) => {
+  const { sessionId } = req.body;
+  if (sessionId) {
+    storage.deleteThread(sessionId);
+  }
+  res.json({ success: true });
 });
 
 // Health check

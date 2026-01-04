@@ -1,27 +1,157 @@
 # MathTeacher-OpenAI-Assistant
-!!This is a work in progress!!
 
-Welcome to MathTeacber-OpenAI-Assistant, an innovative tutoring platform designed to help students excel in mathematics through the power of artificial intelligence. The system utilizes the robust OpenAI Assistant API to provide instant, interactive math tutoring sessions tailored to each student's individual learning pace and style.
+An interactive math tutoring platform powered by OpenAI's Assistant API. Get step-by-step guidance on math problems with LaTeX rendering support.
 
 ## Features
 
-- **Interactive Problem Solving**: Students can input specific math problems and receive step-by-step guidance on how to reach the solution.
-- **Conceptual Explanations**: Beyond just answers, our AI provides in-depth explanations of math concepts to enhance understanding and retention.
-- **Personalized Learning**: Adapts to each student's progress, offering more practice where needed.
-- **24/7 Availability**: Anytime access to a math tutor, making learning possible anytime, anywhere.
-- **Progress Tracking**: Monitors and reports on the student's progress over time.
+- **Interactive Problem Solving** - Real-time math tutoring with code execution
+- **LaTeX Math Rendering** - Beautiful mathematical notation via KaTeX
+- **Dark Mode** - System preference detection with manual toggle
+- **Conversation Persistence** - Sessions saved to disk
+- **Mobile Responsive** - Works on all screen sizes
+- **Rate Limiting** - Built-in API abuse protection
+
+## Prerequisites
+
+- Node.js 18.0.0 or higher
+- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+
+## Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/RalphX1/MathTeacher_OpenAI_Assistant.git
+   cd MathTeacher_OpenAI_Assistant
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your OPENAI_API_KEY
+   ```
+
+4. **Start the server**
+   ```bash
+   npm start
+   ```
+
+5. **Open in browser**
+
+   Navigate to http://localhost:3000
+
+## CLI Mode
+
+For terminal-based interaction:
+```bash
+npm run cli
+```
+
+## Configuration
+
+See `.env.example` for all available options:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENAI_API_KEY` | Yes | - | Your OpenAI API key |
+| `OPENAI_ASSISTANT_ID` | No | - | Reuse existing assistant |
+| `OPENAI_MODEL` | No | gpt-4-turbo | Model to use |
+| `PORT` | No | 3000 | Server port |
+| `RATE_LIMIT_MAX_REQUESTS` | No | 20 | Max requests per minute |
+| `CORS_ALLOWED_ORIGINS` | No | * | Allowed CORS origins |
+
+## Development
+
+```bash
+# Run linter
+npm run lint
+
+# Fix lint issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Watch mode for tests
+npm run test:watch
+```
+
+## API Endpoints
+
+### POST /api/ask
+Submit a math question.
+
+**Request:**
+```json
+{
+  "question": "What is the derivative of x^2?",
+  "sessionId": "session_abc123"
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "The derivative of x^2 is 2x.",
+  "threadId": "thread_xyz789"
+}
+```
+
+### POST /api/clear
+Clear a conversation session.
+
+**Request:**
+```json
+{
+  "sessionId": "session_abc123"
+}
+```
+
+### GET /api/health
+Health check endpoint.
+
+## Project Structure
+
+```
+.
+├── server.js          # Express server with API endpoints
+├── mathTeacher.js     # CLI version
+├── index.html         # Web frontend with KaTeX
+├── style.css          # Styles with dark mode support
+├── lib/
+│   └── storage.js     # Persistent thread storage
+├── __tests__/         # Jest tests
+├── data/              # Session storage (gitignored)
+├── .env.example       # Environment template
+├── .eslintrc.json     # ESLint config
+├── .prettierrc        # Prettier config
+└── jest.config.js     # Jest config
+```
 
 ## How It Works
 
-1. **Student Inquiry**: A student asks a math-related question or inputs a problem to solve.
-2. **AI Assistance**: Our application processes the request using the OpenAI Assistant API and constructs an appropriate educational response.
-3. **Step-by-Step Guidance**: The student receives a step-by-step explanation for the problem at hand.
-4. **Follow-Up**: The system asks if the student needs further clarification on the problem or the underlying concepts, offering additional practice if necessary.
+1. **Student Inquiry** - Ask a math question via web or CLI
+2. **AI Processing** - OpenAI Assistant API processes the request
+3. **Step-by-Step Response** - Receive detailed explanations with math notation
+4. **Conversation Context** - Follow-up questions maintain context
 
 ## Contributing
 
-We welcome contributions from the community. If you have suggestions for improvement or new features, please feel free to fork the repository and submit a pull request.
+1. Fork the repository
+2. Create a feature branch
+3. Run `npm run lint` and `npm test`
+4. Submit a pull request
 
 ## License
 
-MathTeacher-OpenAI-Assistant is open-source software licensed under the MIT license.
+MIT License
